@@ -1,66 +1,36 @@
-let allEpisodes = [];
 function setup() {
-  allEpisodes = getAllEpisodes();
-  makePageForEpisodes(allEpisodes);
-  createSearchBox();
+  const rootElem = document.getElementById("root");
+
+  // Show loading message
+  rootElem.textContent = "Loading episodes...";
+
+  fetch("https://api.tvmaze.com/shows/82/episodes")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      return response.json();
+    })
+    .then((episodes) => {
+      makePageForEpisodes(episodes);
+    })
+    .catch((error) => {
+      rootElem.textContent =
+        "Something went wrong while loading episodes. Please try again.";
+      console.error(error);
+    });
 }
 
 function makePageForEpisodes(episodeList) {
   const rootElem = document.getElementById("root");
 
-  // Clear existing content
   rootElem.innerHTML = "";
 
-  episodeList.forEach(function (episode) {
-    const season = String(episode.season).padStart(2, "0");
-    const number = String(episode.number).padStart(2, "0");
-    const episodeCode = `S${season}E${number}`;
+  const count = document.createElement("p");
+  count.textContent = `Got ${episodeList.length} episode(s)`;
+  rootElem.appendChild(count);
 
-    const episodeDiv = document.createElement("div");
-    episodeDiv.className = "card";
-
-    episodeDiv.innerHTML = `
-  <h2>${episode.name}</h2>
-  <p>${episodeCode}</p>
-  <p>Season: ${episode.season}</p>
-  <p>Episode: ${episode.number}</p>
-  <img src="${episode.image.medium}" />
-  <p>${episode.summary}</p>
-`;
-
-    rootElem.appendChild(episodeDiv);
-  });
-}
-function createSearchBox() {
-  const rootElem = document.getElementById("root");
-
-  const container = document.createElement("div");
-
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = "Search episodes...";
-
-  const counter = document.createElement("p");
-
-  container.appendChild(input);
-  container.appendChild(counter);
-
-  document.body.insertBefore(container, rootElem);
-
-  input.addEventListener("input", function () {
-    const searchTerm = input.value.toLowerCase();
-
-    const filtered = allEpisodes.filter(function (episode) {
-      const name = episode.name.toLowerCase();
-      const summary = episode.summary.toLowerCase();
-
-      return name.includes(searchTerm) || summary.includes(searchTerm);
-    });
-
-    makePageForEpisodes(filtered);
-
-    counter.textContent = `${filtered.length} / ${allEpisodes.length} episodes`;
-  });
+  // (You’ll expand this later — keep simple for now)
 }
 
 window.onload = setup;

@@ -5,24 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alasdair MacDonald (MacDonald91)</title>
     <link href="style.css" rel="stylesheet" />
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   </head>
 
-
   <body>
-    <div id="root">
-    </div>
+    <h1>TV Show Episodes</h1>
 
+    <!-- Search -->
+    <input id="search-input" type="text" placeholder="Search episodes..." />
+
+    <!-- Episode dropdown -->
+    <select id="episode-selector">
+      <option value="all">All Episodes</option>
+    </select>
+
+    <!-- Counter -->
+    <p id="count"></p>
+
+    <!-- Episodes -->
+    <div id="root"></div>
+
+    <!-- TVMaze credit -->
     <p>
-  Data originally from 
-  <a href="https://tvmaze.com/" target="_blank">TVMaze.com</a>
-</p>
+      Data originally from
+      <a href="https://tvmaze.com/" target="_blank">TVMaze.com</a>
+    </p>
 
-
-    <!-- Loads a provided function called getAllEpisodes() which returns all episodes -->
-    
-
-    <!-- Loads YOUR javascript code -->
+    <!-- Your script ONLY -->
     <script src="script.js"></script>
   </body>
 </html>

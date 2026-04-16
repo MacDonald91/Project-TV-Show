@@ -1,36 +1,96 @@
-function setup() {
-  const rootElem = document.getElementById("root");
+let allEpisodes = [];
 
-  // Show loading message
-  rootElem.textContent = "Loading episodes...";
+function setup() {
+  const root = document.getElementById("root");
+  root.textContent = "Loading episodes...";
 
   fetch("https://api.tvmaze.com/shows/82/episodes")
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      return response.json();
-    })
+    .then((res) => res.json())
     .then((episodes) => {
-      makePageForEpisodes(episodes);
+      allEpisodes = episodes;
+
+      populateEpisodeSelector(allEpisodes);
+      makePageForEpisodes(allEpisodes);
+      setupSearch();
     })
-    .catch((error) => {
-      rootElem.textContent =
-        "Something went wrong while loading episodes. Please try again.";
-      console.error(error);
+    .catch(() => {
+      root.textContent = "Error loading episodes";
     });
 }
 
+function populateEpisodeSelector(episodes) {
+  const selector = document.getElementById("episode-selector");
+
+  episodes.forEach((ep) => {
+    const option = document.createElement("option");
+
+    const season = String(ep.season).padStart(2, "0");
+    const number = String(ep.number).padStart(2, "0");
+    const code = `S${season}E${number}`;
+
+    option.value = ep.id;
+    option.textContent = `${code} - ${ep.name}`;
+
+    selector.appendChild(option);
+  });
+
+  selector.addEventListener("change", handleEpisodeSelect);
+}
+
+function handleEpisodeSelect(event) {
+  const selectedId = event.target.value;
+
+  if (selectedId === "all") {
+    makePageForEpisodes(allEpisodes);
+  } else {
+    const selected = allEpisodes.filter(
+      (ep) => ep.id == selectedId
+    );
+    makePageForEpisodes(selected);
+  }
+}
+
+function setupSearch() {
+  const input = document.getElementById("search-input");
+
+  input.addEventListener("input", () => {
+    const searchTerm = input.value.toLowerCase();
+
+    const filtered = allEpisodes.filter((ep) => {
+      return (
+        ep.name.toLowerCase().includes(searchTerm) ||
+        ep.summary.toLowerCase().includes(searchTerm)
+      );
+    });
+
+    makePageForEpisodes(filtered);
+  });
+}
+
 function makePageForEpisodes(episodeList) {
-  const rootElem = document.getElementById("root");
+  const root = document.getElementById("root");
+  const count = document.getElementById("count");
 
-  rootElem.innerHTML = "";
+  root.innerHTML = "";
 
-  const count = document.createElement("p");
-  count.textContent = `Got ${episodeList.length} episode(s)`;
-  rootElem.appendChild(count);
+  count.textContent = `Displaying ${episodeList.length} / ${allEpisodes.length} episodes`;
 
-  // (You’ll expand this later — keep simple for now)
+  episodeList.forEach((ep) => {
+    const season = String(ep.season).padStart(2, "0");
+    const number = String(ep.number).padStart(2, "0");
+    const code = `S${season}E${number}`;
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <h3>${ep.name} - ${code}</h3>
+      <img src="${ep.image.medium}" />
+      <p>${ep.summary}</p>
+    `;
+
+    root.appendChild(card);
+  });
 }
 
 window.onload = setup;

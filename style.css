@@ -1,7 +1,8 @@
 #root {
   display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 15px;
+    justify-content: center;
   }
   
   .card {
@@ -12,4 +13,22 @@
   
   .card img {
     width: 100%;
+}
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+body {
+  font-family: Arial, sans-serif;
+  padding: 10px;
+}
+
+select,
+input {
+  padding: 8px;
+  font-size: 14px;
+  width: 200px;
 }

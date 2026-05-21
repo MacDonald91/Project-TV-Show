@@ -2,10 +2,16 @@ body {
   font-family: Arial, sans-serif;
 }
 
-#controls {
+img {
+  max-width: 100%;
+}
+
+nav {
   margin-bottom: 20px;
 }
 
-img {
-  max-width: 100%;
+#showsView, #episodesView {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }

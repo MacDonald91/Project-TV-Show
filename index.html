@@ -1,27 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TV Show Project | Alasdair MacDonald</title>
-    <link href="style.css" rel="stylesheet" />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TV Show Project</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
 
-  <body>
-    <div id="controls">
-      <input type="text" id="searchInput" placeholder="Search episodes..." />
-      
-      <select id="episodeSelect">
-        <option value="">All Episodes</option>
-      </select>
+<body>
 
-      <p id="episodeCount"></p>
-      <p id="loading">Loading episodes...</p>
-      <p id="error" style="color:red;"></p>
-    </div>
+  <nav>
+    <button id="homeBtn">Home</button>
+  </nav>
 
-    <div id="root"></div>
+  <div id="controls">
+    <input type="text" id="showSearch" placeholder="Search shows..." />
 
-    <script src="script.js"></script>
-  </body>
+    <input type="text" id="episodeSearch" placeholder="Search episodes..." />
+
+    <select id="episodeSelect">
+      <option value="">All Episodes</option>
+    </select>
+
+    <p id="count"></p>
+    <p id="loading">Loading...</p>
+    <p id="error" style="color:red;"></p>
+  </div>
+
+  <div id="showsView"></div>
+  <div id="episodesView" style="display:none;"></div>
+
+  <script src="script.js"></script>
+</body>
 </html>

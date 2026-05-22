@@ -1,6 +1,7 @@
 let allShows = [];
 let allEpisodes = [];
 let episodeCache = {};
+let currentView = "shows";
 
 function setup() {
   fetchShows();
@@ -15,41 +16,41 @@ function fetchShows() {
       allShows = data;
       renderShows(allShows);
       setupShowSearch();
-    })
-    .catch(() => {
-      document.getElementById("error").textContent = "Error loading shows";
     });
 }
 
 // ---------- SHOWS VIEW ----------
 function renderShows(list) {
-  const container = document.getElementById("showsView");
+  currentView = "shows";
+
+  const showsView = document.getElementById("showsView");
   const episodesView = document.getElementById("episodesView");
 
-  container.innerHTML = "";
+  showsView.innerHTML = "";
+  showsView.style.display = "block";
   episodesView.style.display = "none";
-  container.style.display = "block";
+
+  // 🔥 FIX: clear ALL state
+  document.getElementById("showSearch").value = "";
+  document.getElementById("episodeSearch").value = "";
+  document.getElementById("episodeSelect").innerHTML = "<option>All Episodes</option>";
+
+  updateCount(list.length, allShows.length);
 
   list.forEach(show => {
     const card = document.createElement("div");
 
-    card.innerHTML = `
-      <h2 class="showTitle" data-id="${show.id}">${show.name}</h2>
-      <img src="${show.image?.medium || ""}">
-      <p>${show.summary || ""}</p>
-      <p>Genres: ${show.genres.join(", ")}</p>
-      <p>Status: ${show.status}</p>
-      <p>Rating: ${show.rating?.average || "N/A"}</p>
-      <p>Runtime: ${show.runtime} mins</p>
-    `;
+    const title = document.createElement("h2");
+    title.textContent = show.name;
+    title.style.cursor = "pointer";
 
-    container.appendChild(card);
-  });
+    title.onclick = () => {
+      fetchEpisodes(show.id);
+    };
 
-  document.querySelectorAll(".showTitle").forEach(el => {
-    el.addEventListener("click", () => {
-      fetchEpisodes(el.dataset.id);
-    });
+    card.appendChild(title);
+
+    showsView.appendChild(card);
   });
 }
 
@@ -58,12 +59,12 @@ function setupShowSearch() {
   const input = document.getElementById("showSearch");
 
   input.oninput = () => {
+    if (currentView !== "shows") return;
+
     const term = input.value.toLowerCase();
 
     const filtered = allShows.filter(show =>
-      show.name.toLowerCase().includes(term) ||
-      show.genres.join(" ").toLowerCase().includes(term) ||
-      (show.summary || "").toLowerCase().includes(term)
+      show.name.toLowerCase().includes(term)
     );
 
     renderShows(filtered);
@@ -72,9 +73,13 @@ function setupShowSearch() {
 
 // ---------- FETCH EPISODES ----------
 function fetchEpisodes(showId) {
-  const loading = document.getElementById("loading");
+  currentView = "episodes";
 
+  const loading = document.getElementById("loading");
   loading.style.display = "block";
+
+  // 🔥 FIX: reset show search
+  document.getElementById("showSearch").value = "";
 
   if (episodeCache[showId]) {
     allEpisodes = episodeCache[showId];
@@ -90,40 +95,35 @@ function fetchEpisodes(showId) {
       allEpisodes = data;
       loading.style.display = "none";
       renderEpisodes(allEpisodes);
-    })
-    .catch(() => {
-      loading.style.display = "none";
-      document.getElementById("error").textContent = "Error loading episodes";
     });
 }
 
 // ---------- EPISODES VIEW ----------
 function renderEpisodes(list) {
   const showsView = document.getElementById("showsView");
-  const container = document.getElementById("episodesView");
+  const episodesView = document.getElementById("episodesView");
 
   showsView.style.display = "none";
-  container.style.display = "block";
+  episodesView.style.display = "block";
+  episodesView.innerHTML = "";
 
-  container.innerHTML = "";
+  // 🔥 FIX: clear episode search properly
+  document.getElementById("episodeSearch").value = "";
+
+  updateCount(list.length, allEpisodes.length);
 
   list.forEach(ep => {
     const card = document.createElement("div");
 
-    const code = formatEpisodeCode(ep.season, ep.number);
+    const title = document.createElement("h2");
+    title.textContent = ep.name;
 
-    card.innerHTML = `
-      <h2>${ep.name} - ${code}</h2>
-      <img src="${ep.image?.medium || ""}">
-      <p>${ep.summary || ""}</p>
-    `;
-
-    container.appendChild(card);
+    card.appendChild(title);
+    episodesView.appendChild(card);
   });
 
   setupEpisodeSearch();
   setupEpisodeSelector();
-  updateCount(list);
 }
 
 // ---------- EPISODE SEARCH ----------
@@ -131,11 +131,12 @@ function setupEpisodeSearch() {
   const input = document.getElementById("episodeSearch");
 
   input.oninput = () => {
+    if (currentView !== "episodes") return;
+
     const term = input.value.toLowerCase();
 
     const filtered = allEpisodes.filter(ep =>
-      ep.name.toLowerCase().includes(term) ||
-      (ep.summary || "").toLowerCase().includes(term)
+      ep.name.toLowerCase().includes(term)
     );
 
     renderEpisodes(filtered);
@@ -150,15 +151,14 @@ function setupEpisodeSelector() {
 
   allEpisodes.forEach(ep => {
     const option = document.createElement("option");
-
-    const code = formatEpisodeCode(ep.season, ep.number);
     option.value = ep.id;
-    option.textContent = `${code} - ${ep.name}`;
-
+    option.textContent = ep.name;
     select.appendChild(option);
   });
 
   select.onchange = () => {
+    if (currentView !== "episodes") return;
+
     if (!select.value) {
       renderEpisodes(allEpisodes);
       return;
@@ -169,22 +169,24 @@ function setupEpisodeSelector() {
   };
 }
 
-// ---------- COUNT ----------
-function updateCount(list) {
-  document.getElementById("count").textContent =
-    `Displaying ${list.length} / ${allEpisodes.length}`;
-}
-
 // ---------- HOME BUTTON ----------
 function setupHomeButton() {
   document.getElementById("homeBtn").onclick = () => {
+    currentView = "shows";
+
+    // 🔥 FIX: reset EVERYTHING
+    document.getElementById("showSearch").value = "";
+    document.getElementById("episodeSearch").value = "";
+    document.getElementById("episodeSelect").innerHTML = "<option>All Episodes</option>";
+
     renderShows(allShows);
   };
 }
 
-// ---------- FORMAT ----------
-function formatEpisodeCode(season, number) {
-  return `S${String(season).padStart(2, "0")}E${String(number).padStart(2, "0")}`;
+// ---------- COUNT ----------
+function updateCount(current, total) {
+  document.getElementById("count").textContent =
+    `Displaying ${current} / ${total}`;
 }
 
 window.onload = setup;

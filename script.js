@@ -16,6 +16,9 @@ function fetchShows() {
       allShows = data;
       renderShows(allShows);
       setupShowSearch();
+    })
+    .catch(() => {
+      document.getElementById("error").textContent = "Error loading shows";
     });
 }
 
@@ -30,10 +33,9 @@ function renderShows(list) {
   showsView.style.display = "block";
   episodesView.style.display = "none";
 
-  // 🔥 FIX: clear ALL state
+  // reset state
   document.getElementById("showSearch").value = "";
   document.getElementById("episodeSearch").value = "";
-  document.getElementById("episodeSelect").innerHTML = "<option>All Episodes</option>";
 
   updateCount(list.length, allShows.length);
 
@@ -43,12 +45,21 @@ function renderShows(list) {
     const title = document.createElement("h2");
     title.textContent = show.name;
     title.style.cursor = "pointer";
+    title.onclick = () => fetchEpisodes(show.id);
 
-    title.onclick = () => {
-      fetchEpisodes(show.id);
-    };
+    const img = document.createElement("img");
+    img.src = show.image?.medium || "";
+
+    const summary = document.createElement("p");
+    summary.textContent = stripHTML(show.summary || "");
+
+    const meta = document.createElement("p");
+    meta.textContent = `Genres: ${show.genres.join(", ")} | Status: ${show.status} | Rating: ${show.rating?.average || "N/A"} | Runtime: ${show.runtime}`;
 
     card.appendChild(title);
+    card.appendChild(img);
+    card.appendChild(summary);
+    card.appendChild(meta);
 
     showsView.appendChild(card);
   });
@@ -64,7 +75,9 @@ function setupShowSearch() {
     const term = input.value.toLowerCase();
 
     const filtered = allShows.filter(show =>
-      show.name.toLowerCase().includes(term)
+      show.name.toLowerCase().includes(term) ||
+      show.genres.join(" ").toLowerCase().includes(term) ||
+      stripHTML(show.summary || "").toLowerCase().includes(term)
     );
 
     renderShows(filtered);
@@ -78,7 +91,6 @@ function fetchEpisodes(showId) {
   const loading = document.getElementById("loading");
   loading.style.display = "block";
 
-  // 🔥 FIX: reset show search
   document.getElementById("showSearch").value = "";
 
   if (episodeCache[showId]) {
@@ -95,6 +107,10 @@ function fetchEpisodes(showId) {
       allEpisodes = data;
       loading.style.display = "none";
       renderEpisodes(allEpisodes);
+    })
+    .catch(() => {
+      loading.style.display = "none";
+      document.getElementById("error").textContent = "Error loading episodes";
     });
 }
 
@@ -107,7 +123,6 @@ function renderEpisodes(list) {
   episodesView.style.display = "block";
   episodesView.innerHTML = "";
 
-  // 🔥 FIX: clear episode search properly
   document.getElementById("episodeSearch").value = "";
 
   updateCount(list.length, allEpisodes.length);
@@ -116,9 +131,18 @@ function renderEpisodes(list) {
     const card = document.createElement("div");
 
     const title = document.createElement("h2");
-    title.textContent = ep.name;
+    title.textContent = `${ep.name} - ${formatEpisodeCode(ep.season, ep.number)}`;
+
+    const img = document.createElement("img");
+    img.src = ep.image?.medium || "";
+
+    const summary = document.createElement("p");
+    summary.textContent = stripHTML(ep.summary || "");
 
     card.appendChild(title);
+    card.appendChild(img);
+    card.appendChild(summary);
+
     episodesView.appendChild(card);
   });
 
@@ -136,7 +160,8 @@ function setupEpisodeSearch() {
     const term = input.value.toLowerCase();
 
     const filtered = allEpisodes.filter(ep =>
-      ep.name.toLowerCase().includes(term)
+      ep.name.toLowerCase().includes(term) ||
+      stripHTML(ep.summary || "").toLowerCase().includes(term)
     );
 
     renderEpisodes(filtered);
@@ -151,8 +176,10 @@ function setupEpisodeSelector() {
 
   allEpisodes.forEach(ep => {
     const option = document.createElement("option");
+
     option.value = ep.id;
-    option.textContent = ep.name;
+    option.textContent = `${formatEpisodeCode(ep.season, ep.number)} - ${ep.name}`;
+
     select.appendChild(option);
   });
 
@@ -174,13 +201,24 @@ function setupHomeButton() {
   document.getElementById("homeBtn").onclick = () => {
     currentView = "shows";
 
-    // 🔥 FIX: reset EVERYTHING
     document.getElementById("showSearch").value = "";
     document.getElementById("episodeSearch").value = "";
     document.getElementById("episodeSelect").innerHTML = "<option>All Episodes</option>";
 
     renderShows(allShows);
   };
+}
+
+// ---------- HELPERS ----------
+function formatEpisodeCode(season, number) {
+  return `S${String(season).padStart(2, "0")}E${String(number).padStart(2, "0")}`;
+}
+
+// XSS SAFE CLEANER
+function stripHTML(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || "";
 }
 
 // ---------- COUNT ----------

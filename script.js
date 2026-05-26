@@ -4,6 +4,9 @@ let episodeCache = {};
 let currentView = "shows";
 
 function setup() {
+  const loading = document.getElementById("loading");
+  loading.style.display = "block";
+
   fetchShows();
   setupHomeButton();
 }
@@ -14,10 +17,14 @@ function fetchShows() {
     .then(res => res.json())
     .then(data => {
       allShows = data;
+
+      document.getElementById("loading").style.display = "none";
+
       renderShows(allShows);
       setupShowSearch();
     })
     .catch(() => {
+      document.getElementById("loading").style.display = "none";
       document.getElementById("error").textContent = "Error loading shows";
     });
 }
@@ -32,10 +39,6 @@ function renderShows(list) {
   showsView.innerHTML = "";
   showsView.style.display = "block";
   episodesView.style.display = "none";
-
-  // reset state
-  document.getElementById("showSearch").value = "";
-  document.getElementById("episodeSearch").value = "";
 
   updateCount(list.length, allShows.length);
 
@@ -69,7 +72,7 @@ function renderShows(list) {
 function setupShowSearch() {
   const input = document.getElementById("showSearch");
 
-  input.oninput = () => {
+  input.addEventListener("input", () => {
     if (currentView !== "shows") return;
 
     const term = input.value.toLowerCase();
@@ -81,7 +84,7 @@ function setupShowSearch() {
     );
 
     renderShows(filtered);
-  };
+  });
 }
 
 // ---------- FETCH EPISODES ----------
@@ -90,8 +93,6 @@ function fetchEpisodes(showId) {
 
   const loading = document.getElementById("loading");
   loading.style.display = "block";
-
-  document.getElementById("showSearch").value = "";
 
   if (episodeCache[showId]) {
     allEpisodes = episodeCache[showId];
@@ -105,7 +106,9 @@ function fetchEpisodes(showId) {
     .then(data => {
       episodeCache[showId] = data;
       allEpisodes = data;
+
       loading.style.display = "none";
+
       renderEpisodes(allEpisodes);
     })
     .catch(() => {
@@ -122,8 +125,6 @@ function renderEpisodes(list) {
   showsView.style.display = "none";
   episodesView.style.display = "block";
   episodesView.innerHTML = "";
-
-  document.getElementById("episodeSearch").value = "";
 
   updateCount(list.length, allEpisodes.length);
 
@@ -154,7 +155,7 @@ function renderEpisodes(list) {
 function setupEpisodeSearch() {
   const input = document.getElementById("episodeSearch");
 
-  input.oninput = () => {
+  input.addEventListener("input", () => {
     if (currentView !== "episodes") return;
 
     const term = input.value.toLowerCase();
@@ -165,7 +166,7 @@ function setupEpisodeSearch() {
     );
 
     renderEpisodes(filtered);
-  };
+  });
 }
 
 // ---------- EPISODE SELECT ----------
@@ -176,10 +177,8 @@ function setupEpisodeSelector() {
 
   allEpisodes.forEach(ep => {
     const option = document.createElement("option");
-
     option.value = ep.id;
     option.textContent = `${formatEpisodeCode(ep.season, ep.number)} - ${ep.name}`;
-
     select.appendChild(option);
   });
 
@@ -214,7 +213,6 @@ function formatEpisodeCode(season, number) {
   return `S${String(season).padStart(2, "0")}E${String(number).padStart(2, "0")}`;
 }
 
-// XSS SAFE CLEANER
 function stripHTML(html) {
   const div = document.createElement("div");
   div.innerHTML = html;
